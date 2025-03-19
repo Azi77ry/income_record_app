@@ -1,48 +1,62 @@
-// Function to sort records by date in ascending order
-function sortRecordsByDate() {
-    records.sort((a, b) => {
-        if (!isValidDate(a.date) || !isValidDate(b.date)) {
-            console.error("Invalid date found in records:", a.date, b.date);
-            return 0; // Skip sorting for invalid dates
-        }
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateA - dateB;
-    });
-}
-// Check if records exist in localStorage, otherwise initialize an empty array
-let records = JSON.parse(localStorage.getItem('records')) || [];
-
-// Function to save records to localStorage
-function saveRecords() {
-    localStorage.setItem('records', JSON.stringify(records));
-}
-
-// Function to calculate the total amount
-function calculateTotalAmount() {
-    const total = records.reduce((sum, record) => sum + parseFloat(record.amount), 0);
-    return total.toFixed(2); // Format to 2 decimal places
-}
-
-// Function to update the total amount display
-function updateTotalAmount() {
-    const totalAmountElementAdmin = document.getElementById('totalAmount');
-    const totalAmountElementUser = document.getElementById('totalAmount');
-    
-    if (totalAmountElementAdmin) {
-        totalAmountElementAdmin.textContent = calculateTotalAmount();
-    }
-    if (totalAmountElementUser) {
-        totalAmountElementUser.textContent = calculateTotalAmount();
-    }
-}
+const API_URL = 'http://localhost:5000/api/records'; // Backend API URL
 
 // Pagination Variables
 let currentPage = 1;
 const rowsPerPage = 9;
 
-// Function to update the table with pagination
-function updateTable() {
+// Fetch records from the server and sort them by date
+async function fetchRecords() {
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error('Failed to fetch records');
+        }
+        const records = await response.json();
+
+        // Sort records by date in ascending order
+        records.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        return records;
+    } catch (error) {
+        console.error('Error fetching records:', error);
+        return [];
+    }
+}
+
+// Add a record to the server
+async function addRecord(record) {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to add record');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error adding record:', error);
+    }
+}
+
+// Delete a record from the server
+async function deleteRecord(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete record');
+        }
+    } catch (error) {
+        console.error('Error deleting record:', error);
+    }
+}
+
+// Update the table with records from the server
+async function updateTable() {
+    const records = await fetchRecords();
     const tableBodyAdmin = document.getElementById('recordTable');
     const tableBodyUser = document.getElementById('userRecordTable');
     const pageInfo = document.getElementById('pageInfo');
@@ -62,8 +76,8 @@ function updateTable() {
                 <td>${record.amount}</td>
                 <td>${record.date}</td>
                 <td>
-                    <button class="btn btn-warning btn-sm" onclick="editRecord(${record.id})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteRecord(${record.id})">Delete</button>
+                    <button class="btn btn-warning btn-sm" onclick="editRecord('${record._id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteRecordAndUpdate('${record._id}')">Delete</button>
                 </td>
             `;
             tableBodyAdmin.appendChild(row);
@@ -89,9 +103,28 @@ function updateTable() {
         const totalPages = Math.ceil(records.length / rowsPerPage);
         pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
     }
+
+    // Update Total Amount
+    updateTotalAmount(records);
 }
 
-// Function to go to the previous page
+// Calculate and update the total amount
+function updateTotalAmount(records) {
+    const totalAmountElementAdmin = document.getElementById('totalAmount');
+    const totalAmountElementUser = document.getElementById('totalAmount');
+
+    const total = records.reduce((sum, record) => sum + parseFloat(record.amount), 0);
+    const totalAmount = total.toFixed(2);
+
+    if (totalAmountElementAdmin) {
+        totalAmountElementAdmin.textContent = totalAmount;
+    }
+    if (totalAmountElementUser) {
+        totalAmountElementUser.textContent = totalAmount;
+    }
+}
+
+// Go to the previous page
 function previousPage() {
     if (currentPage > 1) {
         currentPage--;
@@ -99,7 +132,7 @@ function previousPage() {
     }
 }
 
-// Function to go to the next page
+// Go to the next page
 function nextPage() {
     const totalPages = Math.ceil(records.length / rowsPerPage);
     if (currentPage < totalPages) {
@@ -108,55 +141,44 @@ function nextPage() {
     }
 }
 
-// Admin Page: Add Record
-if (document.getElementById('incomeForm')) {
-    document.getElementById('incomeForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        const description = document.getElementById('description').value;
-        const amount = document.getElementById('amount').value;
-        const date = document.getElementById('date').value;
-
-        const record = {
-            id: Date.now(),
-            description,
-            amount,
-            date
-        };
-
-        records.push(record);
-        saveRecords();
-        updateTable();
-        updateTotalAmount();
-        document.getElementById('incomeForm').reset();
-    });
+// Delete a record and update the table
+async function deleteRecordAndUpdate(id) {
+    await deleteRecord(id);
+    await updateTable();
 }
 
-// Edit Record
-function editRecord(id) {
-    const record = records.find(record => record.id === id);
+// Edit a record
+async function editRecord(id) {
+    const records = await fetchRecords();
+    const record = records.find(record => record._id === id);
+
     if (record) {
         document.getElementById('description').value = record.description;
         document.getElementById('amount').value = record.amount;
         document.getElementById('date').value = record.date;
 
-        records = records.filter(record => record.id !== id);
-        saveRecords();
-        updateTable();
-        updateTotalAmount();
+        // Delete the old record
+        await deleteRecordAndUpdate(id);
     }
 }
 
-// Delete Record
-function deleteRecord(id) {
-    records = records.filter(record => record.id !== id);
-    saveRecords();
-    updateTable();
-    displayUserRecords(); // Update user page if open
-    updateTotalAmount();
+// Add record form submission
+if (document.getElementById('incomeForm')) {
+    document.getElementById('incomeForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const description = document.getElementById('description').value;
+        const amount = document.getElementById('amount').value;
+        const date = document.getElementById('date').value;
+
+        const record = { description, amount, date };
+        await addRecord(record);
+        await updateTable();
+        document.getElementById('incomeForm').reset();
+    });
 }
 
-// Print Records
+// Print records
 function printRecords() {
     const printWindow = window.open('', '', 'height=600,width=800');
     printWindow.document.write('<html><head><title>Income Records</title>');
@@ -166,7 +188,7 @@ function printRecords() {
     printWindow.document.write('<table class="table table-bordered">');
     printWindow.document.write('<thead><tr><th>Description</th><th>Amount</th><th>Date</th></tr></thead>');
     printWindow.document.write('<tbody>');
-    
+
     records.forEach(record => {
         printWindow.document.write(`<tr><td>${record.description}</td><td>${record.amount}</td><td>${record.date}</td></tr>`);
     });
@@ -178,5 +200,4 @@ function printRecords() {
 }
 
 // Initialize
-updateTable(); // Display the first page of records
-updateTotalAmount();
+updateTable();
