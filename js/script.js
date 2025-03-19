@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/records'; // Backend API URL
+const API_URL = 'http://marizee.railway.internal/api/records'; // Backend API URL
 
 // Pagination Variables
 let currentPage = 1;
