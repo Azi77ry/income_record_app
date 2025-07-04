@@ -5,25 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Income Record Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/styles.css">
-    <!-- Google Fonts for a custom font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
 </head>
-<body>
-    <!-- Password Prompt Modal -->
+<body class="admin-body">
+    <!-- Password Prompt Modal (Enhanced) -->
     <div id="passwordModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Admin Access</h5>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Admin Access</h5>
                 </div>
                 <div class="modal-body">
-                    <p>Please enter the admin password to continue:</p>
-                    <input type="password" id="passwordInput" class="form-control" placeholder="Enter password">
-                    <p id="errorMessage" class="text-danger mt-2" style="display: none;">Incorrect password. Please try again.</p>
+                    <div class="text-center mb-3">
+                        <i class="bi bi-person-lock" style="font-size: 3rem; color: #0d6efd;"></i>
+                    </div>
+                    <p class="text-center">Please enter the admin password to continue:</p>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="password" id="passwordInput" class="form-control" placeholder="Enter password" autocomplete="off">
+                    </div>
+                    <p id="errorMessage" class="text-danger mt-2 text-center" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i> Incorrect password. Please try again.
+                    </p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="checkPassword()">Submit</button>
+                    <button type="button" class="btn btn-primary w-100" onclick="checkPassword()">
+                        <i class="bi bi-box-arrow-in-right"></i> Submit
+                    </button>
                 </div>
             </div>
         </div>
@@ -31,68 +42,309 @@
 
     <!-- Admin Page Content (Hidden by Default) -->
     <div id="adminContent" style="display: none;">
-        <!-- Stylish Header -->
-        <header class="bg-gradient text-white text-center py-4 mb-4 shadow">
+        <!-- Enhanced Header with Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-gradient shadow">
             <div class="container">
-                <h1 class="display-4 font-weight-bold">Admin - Income Record Manager</h1>
-                <p class="lead">Manage your income records efficiently</p>
-            </div>
-        </header>
-
-        <div class="container mt-5">
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <h2 class="mb-3">Add Income Record</h2>
-                    <form id="incomeForm" class="bg-light p-4 rounded shadow-sm">
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="description" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amount" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="date" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="date" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Add Record</button>
-                    </form>
+                <a class="navbar-brand d-flex align-items-center" href="#">
+                    <i class="bi bi-cash-coin me-2"></i>
+                    <span class="fw-bold">Income Manager Pro</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#"><i class="bi bi-house-door"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html"><i class="bi bi-person"></i> User View</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="col-md-6">
-                    <h2 class="mb-3">Records</h2>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recordTable">
-                                <!-- Records will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                   <!-- Pagination Controls -->
-<div class="d-flex justify-content-center align-items-center gap-2 mt-3">
-    <button class="btn btn-secondary btn-sm" onclick="previousPage()">Previous</button>
-    <span id="pageInfo" class="mx-2">Page 1 of 1</span>
-    <button class="btn btn-secondary btn-sm" onclick="nextPage()">Next</button>
-</div>
-                    <!-- Compact Total Amount Card -->
-                    <div class="card mt-3 bg-primary text-white p-2">
-                        <div class="card-body p-2">
-                            <h5 class="card-title mb-1">Total Amount</h5>
-                            <p class="card-text fs-5 mb-0" id="totalAmount">0</p>
+            </div>
+        </nav>
+
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-2 d-none d-lg-block">
+                    <div class="card sidebar-card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Menu</h5>
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#"><i class="bi bi-plus-circle"></i> Add Record</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" onclick="updateTable()"><i class="bi bi-arrow-clockwise"></i> Refresh</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#exportModal"><i class="bi bi-download"></i> Export Data</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#importModal"><i class="bi bi-upload"></i> Import Data</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" onclick="printRecords()"><i class="bi bi-printer"></i> Print</a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <!-- Compact Buttons -->
-                    <div class="d-flex gap-2 mt-3">
-                        <button class="btn btn-success btn-sm flex-grow-1" onclick="printRecords()">Print Records</button>
-                        <a href="index.html" class="btn btn-info btn-sm flex-grow-1">View User Page</a>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-lg-10">
+                    <!-- Dashboard Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Total Income</h6>
+                                            <h3 class="card-title mb-0" id="totalAmountCard">0</h3>
+                                        </div>
+                                        <i class="bi bi-cash-stack" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Records Count</h6>
+                                            <h3 class="card-title mb-0" id="recordsCount">0</h3>
+                                        </div>
+                                        <i class="bi bi-list-ol" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Avg. Income</h6>
+                                            <h3 class="card-title mb-0" id="avgAmount">0</h3>
+                                        </div>
+                                        <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Add Record Form -->
+                        <div class="col-lg-5">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0"><i class="bi bi-plus-circle"></i> Add Income Record</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="incomeForm">
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">Description</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                                                <input type="text" class="form-control" id="description" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="amount" class="form-label">Amount</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                                <input type="number" step="0.01" class="form-control" id="amount" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="date" class="form-label">Date</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                                <input type="date" class="form-control" id="date" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="category" class="form-label">Category</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                                <select class="form-select" id="category">
+                                                    <option value="Salary">Salary</option>
+                                                    <option value="Freelance">Freelance</option>
+                                                    <option value="Investment">Investment</option>
+                                                    <option value="Bonus">Bonus</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-save"></i> Add Record
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Quick Stats Chart -->
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Monthly Overview</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="monthlyChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Records Table -->
+                        <div class="col-lg-7">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0"><i class="bi bi-table"></i> Income Records</h5>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('all')">All Records</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('today')">Today</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('week')">This Week</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('month')">This Month</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('Salary')">Salary</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('Freelance')">Freelance</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="filterRecords('Investment')">Investment</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Amount</th>
+                                                    <th>Date</th>
+                                                    <th>Category</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recordTable">
+                                                <!-- Records will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Enhanced Pagination -->
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div class="form-group mb-0">
+                                            <select class="form-select form-select-sm" onchange="changeRowsPerPage(this.value)">
+                                                <option value="5">5 per page</option>
+                                                <option value="10" selected>10 per page</option>
+                                                <option value="20">20 per page</option>
+                                                <option value="50">50 per page</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="previousPage()" id="prevBtn">
+                                                <i class="bi bi-chevron-left"></i> Previous
+                                            </button>
+                                            <span id="pageInfo" class="mx-2">Page 1 of 1</span>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="nextPage()" id="nextBtn">
+                                                Next <i class="bi bi-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div class="modal fade" id="exportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="bi bi-download"></i> Export Data</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Export Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportCSV" value="csv" checked>
+                                <label class="form-check-label" for="exportCSV">CSV (Excel)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="exportJSON" value="json">
+                                <label class="form-check-label" for="exportJSON">JSON</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">From</span>
+                                <input type="date" class="form-control" id="exportStartDate">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text">To</span>
+                                <input type="date" class="form-control" id="exportEndDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="exportData()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Modal -->
+        <div class="modal fade" id="importModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="bi bi-upload"></i> Import Data</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Import Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="importFormat" id="importCSV" value="csv" checked>
+                                <label class="form-check-label" for="importCSV">CSV (Excel)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="importFormat" id="importJSON" value="json">
+                                <label class="form-check-label" for="importJSON">JSON</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Select File</label>
+                            <input class="form-control" type="file" id="importFile" accept=".csv,.json">
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> CSV format should have columns: Description, Amount, Date, Category
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="importData()">
+                            <i class="bi bi-upload"></i> Import
+                        </button>
                     </div>
                 </div>
             </div>
@@ -100,30 +352,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="js/script.js"></script>
-    <script>
-        // Password Configuration
-        const ADMIN_PASSWORD = "lulu123"; // Set your admin password here
-
-        // Show Password Modal on Page Load
-        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
-        passwordModal.show();
-
-        // Function to Check Password
-        function checkPassword() {
-            const passwordInput = document.getElementById('passwordInput').value;
-            const errorMessage = document.getElementById('errorMessage');
-
-            if (passwordInput === ADMIN_PASSWORD) {
-                passwordModal.hide(); // Hide the password modal
-                document.getElementById('adminContent').style.display = 'block'; // Show admin content
-            } else {
-                errorMessage.style.display = 'block'; // Show error message
-                setTimeout(() => {
-                    window.location.href = "index.html"; // Redirect to user page after incorrect password
-                }, 1000); // Redirect after 1 second
-            }
-        }
-    </script>
 </body>
 </html>
